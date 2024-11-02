@@ -43,6 +43,91 @@ bool isWithinBounds(int x, int y) {
     return x >= 0 && x < SIZE && y >= 0 && y < SIZE;
 }
 
+// Function to validate player's pawn move
+bool isValidPawnMove(int x, int y, int newX, int newY) {
+    // Ensure the move is within bounds
+    if (!isWithinBounds(newX, newY)) {
+        return false;
+    }
+    // Pawn moves one step forward
+    if (newX == x - 1 && newY == y && board[newX][newY] == 0) {
+        return true;
+    }
+    // Pawn captures diagonally
+    if (newX == x - 1 && (newY == y - 1 || newY == y + 1) && board[newX][newY] < 0) {
+        return true;
+    }
+    return false;
+}
+
+// Function to validate rook move
+bool isValidRookMove(int x, int y, int newX, int newY) {
+    if (!isWithinBounds(newX, newY)) {
+        return false;
+    }
+    if (x == newX) { // Horizontal move
+        int step = (newY > y) ? 1 : -1;
+        for (int j = y + step; j != newY; j += step) {
+            if (board[x][j] != 0) {
+                return false; // Path is blocked
+            }
+        }
+        return board[newX][newY] <= 0; // Valid if destination is empty or contains opponent
+    } else if (y == newY) { // Vertical move
+        int step = (newX > x) ? 1 : -1;
+        for (int i = x + step; i != newX; i += step) {
+            if (board[i][y] != 0) {
+                return false; // Path is blocked
+            }
+        }
+        return board[newX][newY] <= 0; // Valid if destination is empty or contains opponent
+    }
+    return false;
+}
+
+// Function to validate knight move
+bool isValidKnightMove(int x, int y, int newX, int newY) {
+    if (!isWithinBounds(newX, newY)) {
+        return false;
+    }
+    int dx = abs(newX - x);
+    int dy = abs(newY - y);
+    return (dx == 2 && dy == 1) || (dx == 1 && dy == 2); // L-shaped move
+}
+
+// Function to validate bishop move
+bool isValidBishopMove(int x, int y, int newX, int newY) {
+    if (!isWithinBounds(newX, newY)) {
+        return false;
+    }
+    if (abs(newX - x) == abs(newY - y)) { // Diagonal move
+        int stepX = (newX > x) ? 1 : -1;
+        int stepY = (newY > y) ? 1 : -1;
+        for (int i = x + stepX, j = y + stepY; i != newX; i += stepX, j += stepY) {
+            if (board[i][j] != 0) {
+                return false; // Path is blocked
+            }
+        }
+        return board[newX][newY] <= 0; // Valid if destination is empty or contains opponent
+    }
+    return false;
+}
+
+// Function to validate queen move
+bool isValidQueenMove(int x, int y, int newX, int newY) {
+    return isValidRookMove(x, y, newX, newY) || isValidBishopMove(x, y, newX, newY);
+}
+
+// Function to validate king move
+bool isValidKingMove(int x, int y, int newX, int newY) {
+    if (!isWithinBounds(newX, newY)) {
+        return false;
+    }
+    int dx = abs(newX - x);
+    int dy = abs(newY - y);
+    return (dx <= 1 && dy <= 1) && (board[newX][newY] <= 0); // One square in any direction
+}
+
 // Function to check if bot has a capture opportunity with a pawn
 bool botHasCaptureOpportunity(int *fromX, int *fromY, int *toX, int *toY) {
     for (int i = 0; i < SIZE; i++) {
@@ -96,15 +181,64 @@ void botMove() {
 
 // Function to execute player's move
 bool playerMove(int x, int y, int newX, int newY) {
-    if (isWithinBounds(x, y) && isWithinBounds(newX, newY) && board[x][y] > 0) {
-        // Basic move validation: ensure moving to an empty square or capturing
-        if (board[newX][newY] <= 0) {
-            board[newX][newY] = board[x][y];
-            board[x][y] = 0;
-            return true;
-        }
+    if (!isWithinBounds(x, y) || !isWithinBounds(newX, newY)) {
+        printf("Invalid move: Out of bounds. Try again.\n");
+        return false;
     }
-    printf("Invalid move. Try again.\n");
+
+    // Ensure player is moving their own piece
+    if (board[x][y] <= 0) {
+        printf("Invalid move: No valid piece at the selected position. Try again.\n");
+        return false;
+    }
+
+    // Validate move based on piece type
+    switch (board[x][y]) {
+        case 1: // White pawn
+            if (isValidPawnMove(x, y, newX, newY)) {
+                board[newX][newY] = board[x][y];
+                board[x][y] = 0;
+                return true;
+            }
+            break;
+        case 2: // White rook
+            if (isValidRookMove(x, y, newX, newY)) {
+                board[newX][newY] = board[x][y];
+                board[x][y] = 0;
+                return true;
+            }
+            break;
+        case 3: // White knight
+            if (isValidKnightMove(x, y, newX, newY)) {
+                board[newX][newY] = board[x][y];
+                board[x][y] = 0;
+                return true;
+            }
+            break;
+        case 4: // White bishop
+            if (isValidBishopMove(x, y, newX, newY)) {
+                board[newX][newY] = board[x][y];
+                board[x][y] = 0;
+                return true;
+            }
+            break;
+        case 5: // White queen
+            if (isValidQueenMove(x, y, newX, newY)) {
+                board[newX][newY] = board[x][y];
+                board[x][y] = 0;
+                return true;
+            }
+            break;
+        case 6: // White king
+            if (isValidKingMove(x, y, newX, newY)) {
+                board[newX][newY] = board[x][y];
+                board[x][y] = 0;
+                return true;
+            }
+            break;
+    }
+
+    printf("Invalid move: Unsupported piece movement. Try again.\n");
     return false;
 }
 
