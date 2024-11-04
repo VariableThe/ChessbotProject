@@ -23,9 +23,11 @@ c int boardSIZE;
 
 This declares a two-dimensional array board of integers to represent the chess board.
 
+```c
 int lastBotMoveX = -1; // Track last moved piece's coordinates for the bot
 int lastBotMoveY = -1;
 int botConsecutiveMoves = 0; // Track consecutive moves of the same piece
+```
 These variables are used to track the last move made by the bot and the number of consecutive moves made by the same piece.
 
 ## Function Definitions
